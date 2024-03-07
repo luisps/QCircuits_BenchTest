@@ -178,7 +178,8 @@ except OSError as error:
     pass
     
 for fname in csv_filesname: 
-    os.rename (fname, archive_dir)
+    fbasename  = os.path.basename(fname)
+    os.rename (fname, archive_dir+'/'+fname)
 
 
 # In[ ]:
