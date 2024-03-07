@@ -178,7 +178,7 @@ except OSError as error:
     pass
     
 for fname in csv_filesname: 
-    shutil.move (fname, archive_dir)
+    os.rename (fname, archive_dir)
 
 
 # In[ ]:
