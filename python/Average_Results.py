@@ -27,7 +27,10 @@ def type_of_script():
     except:
         return 'terminal'
 
-if type_of_script=='terminal':
+typeScript = type_of_script()
+print(typeScript)
+
+if typeScript=='terminal':
     # get arguments from command line
     print (sys.argv[1:])
 
