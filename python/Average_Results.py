@@ -35,18 +35,19 @@ if typeScript=='terminal':
     print (sys.argv[1:])
 
     circuitID = sys.argv[1]
-    path_prefix = sys.argv[2]
-    path = path_prefix + '/' + circuitID + '/'
+    path = sys.argv[2] + '/'
     alg = sys.argv[3]
     init_state = sys.argv[4]
     final_state = sys.argv[5]
+    samples_exp2 = sys.argv[6]
+    n_threads = sys.argv[7]
     
 else:
     # get arguments from command line
     circuitID = '19'
 
     #path = '~/QCircuits_BenchTest/circuits/'
-    path = '../' + circuitID + '/'
+    path = './'
 
     init_state = '0'
     final_state = '0'
@@ -55,10 +56,12 @@ else:
     #alg = 'BD'
     #alg = 'BD_MIS'
 
+    samples_exp2 = 20
+    n_threads = 1
 
 
 extension = '.csv'
-filename_prefix = 'circuit_' + circuitID + '.data_stats_' + alg + '_' + init_state + '_' + final_state
+filename_prefix = 'circuit_' + circuitID + '.data_stats_' + alg + '_' + init_state + '_' + final_state + '_' + samples_exp2 + '_' + n_threads
 
 filename_glob = filename_prefix + '_?' + extension 
 print (filename_glob)
@@ -134,17 +137,18 @@ for ndx in range (1, n_files):
 # Read row by row on all csv
 for row in csv_reader[0]:
     n_samples = row[0]
-    n_paths = row[1]
-    sum_estimateR = float(row[2])
-    sum_estimateI = float(row[3])
-    sum_diffR_sq = (float(row[2])-trueR)**2
-    sum_diffI_sq = (float(row[3])-trueI)**2
+    time = row[1]
+    n_paths = row[2]
+    sum_estimateR = float(row[3])
+    sum_estimateI = float(row[4])
+    sum_diffR_sq = (float(row[3])-trueR)**2
+    sum_diffI_sq = (float(row[4])-trueI)**2
     for ndx in range (1, n_files):
         row = next(csv_reader[ndx])
-        sum_estimateR += float(row[2])
-        sum_estimateI += float(row[3])
-        diffR_sq = (float(row[2])-trueR)**2
-        diffI_sq = (float(row[3])-trueI)**2
+        sum_estimateR += float(row[3])
+        sum_estimateI += float(row[4])
+        diffR_sq = (float(row[3])-trueR)**2
+        diffI_sq = (float(row[4])-trueI)**2
         sum_diffR_sq += diffR_sq
         sum_diffI_sq += diffI_sq
     estimateR = sum_estimateR / n_files
@@ -153,10 +157,11 @@ for row in csv_reader[0]:
     varR = sum_diffR_sq / n_files
     varI = sum_diffI_sq / n_files
 
-    csv_writer.writerow([n_samples, n_paths, estimateR, estimateI, varR, varI, varR+varI, L2])
+    csv_writer.writerow([n_samples, time, n_paths, estimateR, estimateI, varR, varI, varR+varI, L2])
 
 print('{0} + j {1}'.format(estimateR, estimateI))
 print('variance: {0}'.format(varR+varI))
+print ('Time: {0} us'.format(time))
 
 
 # In[ ]:
