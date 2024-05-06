@@ -10,6 +10,7 @@ import math
 import os
 import shutil
 import sys
+from statistics import median
 
 
 # In[ ]:
@@ -139,28 +140,24 @@ for row in csv_reader[0]:
     n_samples = row[0]
     time = row[1]
     n_paths = row[2]
-    sum_estimateR = float(row[3])
-    sum_estimateI = float(row[4])
-    sum_diffR_sq = (float(row[3])-trueR)**2
-    sum_diffI_sq = (float(row[4])-trueI)**2
+    n_nonZero_paths = row[3]
+    sum_estimateR = list(float(row[4]))
+    sum_estimateI = list(float(row[5]))
     for ndx in range (1, n_files):
         row = next(csv_reader[ndx])
-        sum_estimateR += float(row[3])
-        sum_estimateI += float(row[4])
-        diffR_sq = (float(row[3])-trueR)**2
-        diffI_sq = (float(row[4])-trueI)**2
-        sum_diffR_sq += diffR_sq
-        sum_diffI_sq += diffI_sq
-    estimateR = sum_estimateR / n_files
-    estimateI = sum_estimateI / n_files
-    L2 = math.sqrt((estimateR-trueR)**2 + (estimateI-trueI)**2)
-    varR = sum_diffR_sq / n_files
-    varI = sum_diffI_sq / n_files
+        sum_estimateR.append(float(row[4]))
+        sum_estimateI.append(float(row[5]))
+    estimateR = median(sum_estimateR)
+    estimateI = median(sum_estimateI)
+    varR = (estimateR-trueR)**2
+    varI = (estimateI-trueI)**2
+    variance = varR+varI
+    L2 = math.sqrt(variance)
 
-    csv_writer.writerow([n_samples, time, n_paths, estimateR, estimateI, varR, varI, varR+varI, L2])
+    csv_writer.writerow([n_samples, time, n_paths, n_nonZero_paths, estimateR, estimateI, varR, varI, variance, L2])
 
 print('{0} + j {1}'.format(estimateR, estimateI))
-print('variance: {0}'.format(varR+varI))
+print('variance: {0}'.format(variance))
 print ('Time: {0} us'.format(time))
 
 
