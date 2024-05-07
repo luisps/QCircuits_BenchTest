@@ -141,8 +141,8 @@ for row in csv_reader[0]:
     time = row[1]
     n_paths = row[2]
     n_nonZero_paths = row[3]
-    sum_estimateR = list(float(row[4]))
-    sum_estimateI = list(float(row[5]))
+    sum_estimateR = [float(row[4])]
+    sum_estimateI = [float(row[5])]
     for ndx in range (1, n_files):
         row = next(csv_reader[ndx])
         sum_estimateR.append(float(row[4]))
