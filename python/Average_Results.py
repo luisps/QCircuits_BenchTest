@@ -40,7 +40,7 @@ if typeScript=='terminal':
     circuitID = sys.argv[1]
     path = sys.argv[2] + '/'
     alg_nbr = sys.argv[3]
-    alg = alg_name[alg_nbr]
+    alg = alg_name[int(alg_nbr)]
     init_state = sys.argv[4]
     final_state = sys.argv[5]
     samples_exp2 = sys.argv[6]
