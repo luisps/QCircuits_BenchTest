@@ -16,6 +16,8 @@ from statistics import median
 # In[ ]:
 
 
+alg_name = ['', 'IS', 'BD', 'BD_MIS']
+
 # set parameterers either hard coded or from the command line
 
 def type_of_script():
@@ -37,7 +39,8 @@ if typeScript=='terminal':
 
     circuitID = sys.argv[1]
     path = sys.argv[2] + '/'
-    alg = sys.argv[3]
+    alg_nbr = sys.argv[3]
+    alg = alg_name[alg_nbr]
     init_state = sys.argv[4]
     final_state = sys.argv[5]
     samples_exp2 = sys.argv[6]
@@ -53,7 +56,8 @@ else:
     init_state = '0'
     final_state = '0'
 
-    alg = 'IS'
+    alg_nbr = 2
+    alg = alg_name[alg_nbr]
     #alg = 'BD'
     #alg = 'BD_MIS'
 
@@ -70,7 +74,10 @@ print (filename_glob)
 filename_out = filename_prefix + '_average' + extension 
 print (filename_out)
 
+slurm_name = 'Feynman_' + circuitID + '_' + alg_nbr + '_' + init_state + '_' + final_state + '_T' + n_threads + '_S' + samples_exp2 + '_L?.?'    
+
 archive_dir = filename_prefix   
+slurm_dir = 'slurm_files'
 print (archive_dir)
 
 
@@ -185,6 +192,21 @@ except OSError as error:
 for fname in csv_filesname: 
     fbasename  = os.path.basename(fname)
     os.rename (fname, archive_dir+'/'+fbasename)
+
+
+# In[ ]:
+
+
+# archive processed files
+try: 
+    os.mkdir(slurm_dir)
+except OSError as error: 
+    pass
+
+slurm_filesname = [f for f in pathlib.Path(path).glob(slurm_name)]
+for fname in slurm_filesname: 
+    fbasename  = os.path.basename(fname)
+    os.rename (fname, slurm_dir+'/'+fbasename)
 
 
 # In[ ]:
