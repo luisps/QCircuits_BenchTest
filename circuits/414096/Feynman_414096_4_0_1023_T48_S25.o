@@ -1,0 +1,45 @@
+* ----------------------------------------------------------------
+* Running PROLOG for F_414096_4_S25 on Sat May 11 12:15:20 WEST 2024
+*    JOB_NAME                : F_414096_4_S25
+*    JOB_ID                  : 16131994
+*    JOB_PARTITION           : fct
+*    JOB_USER                : lpsantos
+*    JOB_ACCOUNT             : cpca095372023
+*    JOB_QOS                 : cpca095372023
+*    NODE_LIST               : hpc072
+*    SLURM_NNODES            : 1
+*    SLURM_NPROCS            : 48
+*    SLURM_NTASKS            : 48
+*    SLURM_CPUS_ON_NODE      : 48
+*    SLURM_TASKS_PER_NODE    : 48
+*    SLURM_JOB_CPUS_PER_NODE : 48
+*    SLURM_MEM_PER_NODE      : 10000
+*    SUBMIT_HOST             : cirrus09.a.incd.pt
+*    WORK_DIR                : /users5/cpca095372023/lpsantos/Feynman_MCSimulator/build/apps
+*    JOB_SCRIPT              : (null)
+* ----------------------------------------------------------------
+
+** Monte Carlo Feynman simulator LPS@2024
+
+** 	floats AS GNU MP class_mpf
+** 	states AS CState_VChar
+**
+******** 
+
+Algorithm :	BIDIRECTIONAL IMPORTANCE SAMPLING WITH MIS
+Number of threads = 48
+Number of samples = 2^25 = 33554432
+True amplitude = 1.000000e+00 + j 0.000000e+00
+Filename = /users5/cpca095372023/lpsantos/QCircuits_BenchTest/circuits/414096/circuit_414096.data
+Qubits: 4096
+Layers: 43
+
+#different paths from PSI_0 to PSI_f = 2 ^ (4096 * 42) = 2 ^ 172032
+
+Total samples: 33554432
+Non zero paths: 1040
+Total evaluated paths: 1442840576
+< 1023 | U | 0 > = 1.015482 + i 0.000000 	T = 195678.1 s
+< 1023 | U | 0 > = 1.000000 + i 0.000000 TRUE AMPLITUDE L2 error=0.015482
+Estimate variance = 2.397077e-04
+
