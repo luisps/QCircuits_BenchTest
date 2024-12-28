@@ -1,0 +1,2 @@
+Alg,Circuit,DType,R_label,qubits,depth,time,init,final,samples,nodes,threads,paths,nzero_paths,estR,estI,varR,varI
+BD_MIS_NV,191,SP,2,3,10,2607789,0,0,33554432,1,48,335544320,123190576,-2.94666588e-01,-1.87014878e-01,2.55170107e-10,2.89075652e-10
