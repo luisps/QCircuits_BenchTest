@@ -190,25 +190,22 @@ def circuit1 ():
 def circuit2 ():
     qc = QuantumCircuit(4)
     #Layer 0
-    qc.h(0) 
+    qc.x(0) 
     qc.id(1) 
     qc.t(2)
-    qc.h(3)
+    qc.s(3)
     #Layer 1
     qc.t(0)
-    qc.h(1)
+    qc.x(1)
     qc.s(2)
-    qc.h(3)
+    qc.z(3)
     #Layer 2
-    qc.h(0)
-    qc.h(1)
-    qc.h(2)
+    qc.id(0)
     qc.h(3)
+    qc.cnot(1,2)
     #Layer 3
-    qc.h(0) 
-    qc.h(1)
-    qc.h(2)
-    qc.id(3) 
+    qc.cnot(0,1)
+    qc.cnot(2,3)
     return qc   
 
 def circuit3 (num_layers, num_qubits):
@@ -577,7 +574,7 @@ def get_circuit(ID, *args):
         for i in range(0,n,2):
             s.append(0)
             s.append(1)
-        print (s)
+        #print (s)
         random.seed (10000)            
         qc = HSA_gen (n, n_ccz, g, s, Toffoli= False, measure=False, remove_pairs_H=True)
         layers, num_layers = QCircuit_to_layers (qc)
@@ -596,7 +593,7 @@ def get_circuit(ID, *args):
             s[i] = Y%2
             Y = Y //2
             i= i+1
-        print (s)
+        #print (s)
         random.seed (10000)            
         qc = HSA_gen (n, n_ccz, g, s, Toffoli= False, measure=False, remove_pairs_H=True)
         layers, num_layers = QCircuit_to_layers (qc)

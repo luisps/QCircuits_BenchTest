@@ -111,14 +111,14 @@ def oracle_f(n, og):
 
 
 def oracle_fp(n, og, s):
-    """Oracle O_f^{\prime}
+    """Oracle O_f^{ prime}
 
     Args:
         n (int): The number of qubits in the quantum circuit
         og (QuantumCircuit): The O_g oracle quantum circuit
 
     Returns:
-        QuantumCircuit: The O_f^{\prime} oracle quantum circuit
+        QuantumCircuit: The O_f^{ prime} oracle quantum circuit
     """
     qr_fp = qiskit.QuantumRegister(n)
 
