@@ -622,6 +622,12 @@ def get_circuit(ID, *args):
             qc.cx(i, target)
         layers, num_layers = QCircuit_to_layers (qc)
         return qc, qc.num_qubits, layers, num_layers
+    elif ID==7000:   # Clifford (+T) square stabilizer
+        num_qubits = args[0]
+        n_T = args[1]
+        qc = my_random_sq_stabilizer_T (num_qubits, n_T)
+        layers, num_layers = QCircuit_to_layers (qc)
+        return qc, qc.num_qubits, layers, num_layers
 
         
 ###################
@@ -808,6 +814,76 @@ def my_random_circuit_Cliff_T(
             operands = [remaining_qubits.pop() for _ in range(num_operands)]
             register_operands = [qr[i] for i in operands]
 
+            qc.append(operation(), register_operands)
+
+    if measure:
+        qc.measure(qr, cr)
+
+    return qc
+
+def my_random_sq_stabilizer_T(
+    num_qubits, n_T, measure=False, seed=None
+):
+    """Generate random square stabilizer circuit of arbitrary size with n_T T gates.
+
+    The number of T gates is capped to the number of layers max (n_T)=depth=num_qubits)
+
+    This function will generate a random circuit by randomly selecting gates
+    from the set of Clifford gates 
+
+    Args:
+        num_qubits (int): number of quantum wires == number of layers
+        n_T (int): nbr of T gates
+        measure (bool): if True, measure all qubits at the end
+        seed (int): sets random seed (optional)
+
+    Returns:
+        QuantumCircuit: constructed circuit
+
+    Raises:
+        CircuitError: when invalid options given
+    """
+
+    ops = [
+        HGate,          # 0
+        SGate,          # 1
+        CXGate,         # 2
+    ]
+    # TGate is explicitly added to the layer in the first iteration if n_T>0
+    depth = num_qubits
+    if n_T > depth:
+        n_T = depth
+    ops_ndx = [0, 1, 2]
+
+    qr = QuantumRegister(num_qubits, "q")
+    qc = QuantumCircuit(num_qubits)
+
+    if measure:
+        cr = ClassicalRegister(num_qubits, "c")
+        qc.add_register(cr)
+
+    if seed is None:
+        seed = np.random.randint(0, np.iinfo(np.int32).max)
+    rng = np.random.default_rng(seed)
+
+    # apply arbitrary random operations at every depth
+    for _ in range(depth):
+        # choose either 1 or 2 qubits for the operation
+        remaining_qubits = list(range(num_qubits))
+        rng.shuffle(remaining_qubits)
+        # add TGate
+        if n_T > 0:
+            register_operand = [qr[remaining_qubits.pop()]]
+            qc.append(operation(), register_operands)
+            n_T = n_T-1
+        while remaining_qubits:
+            # select the gate
+            max_possible_operands = min(len(remaining_qubits), 2)
+            operation_ndx = rng.choice(ops_ndx, p=[0.333, 0.333, 0.334] if max_possible_operands == 2 else [0.5,0.5])
+            operation = ops[operation_ndx]
+            num_operands = 1 if operation_ndx != 2 else 2
+            operands = [remaining_qubits.pop() for _ in range(num_operands)]
+            register_operands = [qr[i] for i in operands]
             qc.append(operation(), register_operands)
 
     if measure:
