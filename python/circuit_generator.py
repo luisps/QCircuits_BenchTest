@@ -148,7 +148,8 @@ def QCircuit_to_layers (qc):
         layer_to_use = 0
         gate_qubits = []
         for qb in g[1]:
-            qb_index = qb.index
+            bit_location = qc.find_bit(qb)
+            qb_index = bit_location.index
             gate_qubits.append(qb_index)
             #print ('{0} '.format(qb_index),end='')
             if curr_layer[qb_index] >= layer_to_use:
@@ -625,7 +626,16 @@ def get_circuit(ID, *args):
     elif ID==7000:   # Clifford (+T) square stabilizer
         num_qubits = args[0]
         n_T = args[1]
-        qc = my_random_sq_stabilizer_T (num_qubits, n_T)
+        seed = args[2]
+        qc = my_random_sq_stabilizer_T (num_qubits, n_T, seed=seed)
+        layers, num_layers = QCircuit_to_layers (qc)
+        return qc, qc.num_qubits, layers, num_layers
+    elif ID==8000:   # square controlled phase, sparsity
+        num_qubits = args[0]
+        n_H = args[1]
+        ZthetaRange = args[2]   # sampled from [-ZthetaRange .. ZthetaRange]
+        seed = args[3]
+        qc = my_square_controlled_phase (num_qubits, n_H, ZthetaRange, seed=seed)
         layers, num_layers = QCircuit_to_layers (qc)
         return qc, qc.num_qubits, layers, num_layers
 
@@ -836,6 +846,7 @@ def my_random_sq_stabilizer_T(
         n_T (int): nbr of T gates
         measure (bool): if True, measure all qubits at the end
         seed (int): sets random seed (optional)
+        
 
     Returns:
         QuantumCircuit: constructed circuit
@@ -849,7 +860,7 @@ def my_random_sq_stabilizer_T(
         SGate,          # 1
         CXGate,         # 2
     ]
-    # TGate is explicitly added to the layer in the first iteration if n_T>0
+    # TGate is explicitly added to the layer in the first S gate if n_T>0
     depth = num_qubits
     if n_T > depth:
         n_T = depth
@@ -868,23 +879,109 @@ def my_random_sq_stabilizer_T(
 
     # apply arbitrary random operations at every depth
     for _ in range(depth):
+        # does this layer already has a T gate ?
+        has_T = False
         # choose either 1 or 2 qubits for the operation
         remaining_qubits = list(range(num_qubits))
         rng.shuffle(remaining_qubits)
-        # add TGate
-        if n_T > 0:
-            register_operand = [qr[remaining_qubits.pop()]]
-            qc.append(operation(), register_operands)
-            n_T = n_T-1
         while remaining_qubits:
             # select the gate
             max_possible_operands = min(len(remaining_qubits), 2)
-            operation_ndx = rng.choice(ops_ndx, p=[0.333, 0.333, 0.334] if max_possible_operands == 2 else [0.5,0.5])
+            operation_ndx = rng.choice(ops_ndx, p=[0.25, 0.5, 0.25] if max_possible_operands == 2 else [0.3,0.7, 0.0])
             operation = ops[operation_ndx]
             num_operands = 1 if operation_ndx != 2 else 2
             operands = [remaining_qubits.pop() for _ in range(num_operands)]
             register_operands = [qr[i] for i in operands]
+            # insert T gate if appropriate
+            if n_T > 0 and not has_T and operation==SGate:
+                operation = TGate
+                n_T = n_T-1
+                has_T = True
             qc.append(operation(), register_operands)
+
+    if measure:
+        qc.measure(qr, cr)
+
+    return qc
+
+
+def my_square_controlled_phase (num_qubits, n_H, ZthetaRange, measure=False, seed=None):
+    """Generate random square stabilizer circuit of arbitrary size with n_T T gates.
+
+    The number of T gates is capped to the number of layers max (n_T)=depth=num_qubits)
+
+    This function will generate a random circuit by randomly selecting gates
+    from the set of Clifford gates 
+
+    Args:
+        num_qubits (int): number of quantum wires == number of layers
+        n_T (int): nbr of T gates
+        measure (bool): if True, measure all qubits at the end
+        seed (int): sets random seed (optional)
+        
+
+    Returns:
+        QuantumCircuit: constructed circuit
+
+    Raises:
+        CircuitError: when invalid options given
+    """
+
+
+    depth = (num_qubits // 3 ) * 3
+    if num_qubits < 3 :
+        print ('The number of qubits (thus depth) must be larger than 3')
+        return None
+
+    layers = depth // 3
+    
+    qr = QuantumRegister(num_qubits, "q")
+    qc = QuantumCircuit(num_qubits)
+
+    if measure:
+        cr = ClassicalRegister(num_qubits, "c")
+        qc.add_register(cr)
+
+    if not seed is None:
+        random.seed(seed)
+
+    # Get the Zs
+    ZThetalist = []
+    for l in range (layers):
+        ZThetalist.append([random.uniform (-ZthetaRange,ZthetaRange) for _ in range(num_qubits)])
+    # Get the Hs
+    Hlist = []
+    for l in range (layers):
+        Hlist.append(random.sample(['H', 'I'], counts=[n_H, num_qubits-n_H], k=num_qubits))
+
+    for l in range (layers):
+        # HAdamard layer
+        for qb in range(num_qubits):
+            if Hlist[l][qb]=='H':
+                qc.h(qb)
+            else:
+                qc.id(qb)
+
+        # CNOT layer
+        if num_qubits%2==1:
+            qc.id(0 if l%2==1 else num_qubits-1)
+        elif num_qubits%2==0 and l%2==1:
+            qc.cx (0, num_qubits-1)
+            
+        for qb in range(l%2, num_qubits, 2):
+            if qb< (num_qubits-1):
+                qc.cx(qb, qb+1)
+
+        # Rz layer
+        for qb in range(num_qubits):
+            if ZthetaRange == 0.0:
+                qc.rz( 0.0, qb)
+            else:
+                qc.rz(ZThetalist[l][qb] , qb)
+
+    if layers==1:  # add an extra layer of id gates, such that the RGB  simulator runs it
+        for qb in range(num_qubits):
+            qc.id( qb)
 
     if measure:
         qc.measure(qr, cr)
