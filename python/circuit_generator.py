@@ -639,6 +639,12 @@ def get_circuit(ID, *args):
         layers, num_layers = QCircuit_to_layers (qc)
         return qc, qc.num_qubits, layers, num_layers
 
+    elif ID==900000:   # 8x9 random
+        seed = args[0]
+        qc = my_random_900000_circuits (seed=seed)
+        layers, num_layers = QCircuit_to_layers (qc)
+        return qc, qc.num_qubits, layers, num_layers
+
         
 ###################
 #
@@ -987,4 +993,67 @@ def my_square_controlled_phase (num_qubits, n_H, ZthetaRange, measure=False, see
         qc.measure(qr, cr)
 
     return qc
-    
+
+def my_random_900000_circuits (
+    measure=False, seed=None
+):
+    """Generate random 8x9 circuits from the gate pool [H, X, T, CX]
+
+    with probabilities [0.28, 0.285, 0.285, 0.15]
+
+
+    Args:
+        measure (bool): if True, measure all qubits at the end
+        seed (int): sets random seed (optional)
+        
+
+    Returns:
+        QuantumCircuit: constructed circuit
+
+    Raises:
+        CircuitError: when invalid options given
+    """
+
+    ops = [
+        HGate,          # 0
+        XGate,          # 1
+        TGate,          # 2
+        CXGate,         # 3
+    ]
+    depth = 9
+    num_qubits = 8
+
+    ops_ndx = [0, 1, 2, 3]
+
+    qr = QuantumRegister(num_qubits, "q")
+    qc = QuantumCircuit(num_qubits)
+
+    if measure:
+        cr = ClassicalRegister(num_qubits, "c")
+        qc.add_register(cr)
+
+    if seed is None:
+        seed = np.random.randint(0, np.iinfo(np.int32).max)
+    rng = np.random.default_rng(seed)
+
+    # apply arbitrary random operations at every depth
+    for _ in range(depth):
+        # does this layer already has a T gate ?
+        has_T = False
+        # choose either 1 or 2 qubits for the operation
+        remaining_qubits = list(range(num_qubits))
+        rng.shuffle(remaining_qubits)
+        while remaining_qubits:
+            # select the gate
+            max_possible_operands = min(len(remaining_qubits), 2)
+            operation_ndx = rng.choice(ops_ndx, p=[0.28, 0.285, 0.285, 0.15] if max_possible_operands == 2 else [0.33, 0.335, 0.335, 0.0])
+            operation = ops[operation_ndx]
+            num_operands = 1 if operation_ndx != 3 else 2
+            operands = [remaining_qubits.pop() for _ in range(num_operands)]
+            register_operands = [qr[i] for i in operands]
+            qc.append(operation(), register_operands)
+
+    if measure:
+        qc.measure(qr, cr)
+
+    return qc
